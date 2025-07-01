@@ -25,7 +25,6 @@ decorator==5.2.1
 defusedxml==0.7.1
 docker-pycreds==0.4.0
 editdistance==0.8.1
-EGG @ git+ssh://git@github.com/facebookresearch/EGG.git@f36d123af22eb0d127d2089c993b4eff8314a43d
 executing==2.2.0
 expecttest==0.2.1
 fastjsonschema==2.21.1

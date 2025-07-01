@@ -47,6 +47,10 @@
                       pkgs.git
                       pkgs.python312Packages.torchWithRocm
                       pkgs.python312Packages.torchvision
+                      pkgs.ruff
+                      pkgs.freetype
+                      pkgs.fontconfig
+                      pkgs.pkg-config
                     ];
 
                     # https://devenv.sh/languages/
@@ -54,6 +58,8 @@
                     languages.python.version = "3.12.8";
                     languages.python.venv.enable = true;
                     languages.python.venv.requirements = ./requirements.txt;
+
+                    languages.rust.enable = true;
 
                     scripts.hello.exec = ''
                       echo hello!
