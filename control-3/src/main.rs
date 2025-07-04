@@ -1,4 +1,4 @@
-use rand::prelude::*;
+mod algorithms;
 
 fn fn_for_nesterov(point: &[f64; 2]) -> f64 {
     point.iter().map(|x| x * x).sum()
@@ -10,61 +10,30 @@ fn gradf_for_nesterov(point: &[f64; 2]) -> [f64; 2] {
 
 fn fn_for_sgd<const N: usize>(x: &[f64; N]) -> f64 {
     x.windows(2)
-        .map(|x| 50.0 * (x[1] - x[0].powi(2)).powi(2) + (1.0 - x[0]).powi(2))
+        .map(|x| (50.0 * (x[1] - x[0].powi(2)).powi(2) + (1.0 - x[0]).powi(2))/(N as f64))
         .sum()
 }
 
-fn element_wise_gradf<const N: usize>(x: &[f64; N], index: usize) -> f64 {
+fn element_wise_gradf<const N: usize>(x: &[f64; N], index: usize) -> [(f64, usize); 2] {
     match index {
-        index if index == N - 1 => 100.0 * (x[index] - x[index - 1].powi(2)),
-        index if index == 0 => {
-            -200.0 * (x[1] - x[index].powi(2)) * x[index] - 2.0 * (1.0 - x[index])
-        }
+        index if index == N - 2 => [(100.0 * (x[index] - x[index - 1].powi(2))/ (N as f64), index + 1), (0.0, index)],
         _ => {
-            -200.0 * (x[index + 1] - x[index].powi(2)) * x[index] - 2.0 * (1.0 - x[index])
-                + 100.0 * (x[index] - x[index - 1].powi(2))
+            let diff_factor = x[index + 1] - x[index].powi(2);
+            [
+                ((100.0 * diff_factor) / (N as f64), index + 1),
+                ((-200.0 * diff_factor * x[index] - 2.0 * (1.0 - x[index])) / (N as f64), index)
+            ]
         }
     }
-}
-
-fn nesterov<F, G>(_f: F, gradf: G, x0: [f64; 2], alpha: f64, beta: f64, n: u32) -> [f64; 2]
-where
-    F: Fn(&[f64; 2]) -> f64,
-    G: Fn(&[f64; 2]) -> [f64; 2],
-{
-    let mut x_present: [f64; 2] = x0;
-    let mut x_past: [f64; 2] = x0;
-    for _ in 0..n {
-        let v: [f64; 2] = std::array::from_fn(|i| x_present[i] + beta * (x_present[i] - x_past[i]));
-        let grad_v: [f64; 2] = gradf(&v);
-        x_past = x_present;
-        x_present = std::array::from_fn(|i| v[i] - alpha * grad_v[i]);
-    }
-    x_present
-}
-
-fn sgd<const N: usize, F, G>(_f: F, gradf: G, x0: [f64; N], alpha: f64, n: u32) -> [f64; N]
-where
-    F: Fn(&[f64; N]) -> f64,
-    G: Fn(&[f64; N], usize) -> f64,
-{
-    let mut x_present: [f64; N] = x0.clone();
-    let mut rng = rand::rng();
-    for _ in 1..n {
-        let index = rng.random_range(0..N);
-        let grad = gradf(&x_present, index);
-        x_present[index] -= alpha * grad;
-    }
-    x_present
 }
 
 fn main() {
     let point_sgd: [f64; 1000] = [0.5; 1000];
     let test_val_sgd: [f64; 1000] =
-        sgd(fn_for_sgd, element_wise_gradf, point_sgd, 0.001, 1_000_000);
+        algorithms::sgd(fn_for_sgd, element_wise_gradf, point_sgd, 0.1, 100_000);
     println!("final val sgd = {}", fn_for_sgd(&test_val_sgd));
     let point_nesterov: [f64; 2] = [3.0, 5.0];
-    let test_val_nesterov: [f64; 2] = nesterov(
+    let test_val_nesterov: [f64; 2] = algorithms::nesterov(
         fn_for_nesterov,
         gradf_for_nesterov,
         point_nesterov,
