@@ -1,9 +1,10 @@
 import jax
 import jax.numpy as jnp
-import fescent
+from fescent import *
 import numpy as np
 
 import matplotlib.pyplot as plt
+
 
 def alpha(
     x: jnp.ndarray,
