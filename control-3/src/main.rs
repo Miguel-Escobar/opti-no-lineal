@@ -10,7 +10,7 @@ fn gradf_for_nesterov(point: &[f64; 2]) -> [f64; 2] {
 
 fn fn_for_sgd<const N: usize>(x: &[f64; N]) -> f64 {
     x.windows(2)
-        .map(|x| (50.0 * (x[1] - x[0].powi(2)).powi(2) + (1.0 - x[0]).powi(2))/(N as f64))
+        .map(|x| (50.0 * (x[1] - x[0].powi(2)).powi(2) + (1.0 - x[0]).powi(2))/(N as f64 - 1.0))
         .sum()
 }
 
@@ -21,7 +21,7 @@ fn element_wise_gradf<const N: usize>(x: &[f64; N], index: usize) -> [(f64, usiz
             let diff_factor = x[index + 1] - x[index].powi(2);
             [
                 ((100.0 * diff_factor) / (N as f64), index + 1),
-                ((-200.0 * diff_factor * x[index] - 2.0 * (1.0 - x[index])) / (N as f64), index)
+                ((-200.0 * diff_factor * x[index] - 2.0 * (1.0 - x[index])) / (N as f64 - 1.0), index)
             ]
         }
     }

@@ -1,22 +1,22 @@
 use rand::prelude::*;
+use crate::probs::{FullGradient, SparseGradient};
 
-pub fn nesterov<F, G>(_f: F, gradf: G, x0: [f64; 2], alpha: f64, beta: f64, n: u32) -> [f64; 2]
+pub fn nesterov<P, const N: usize>(prob: P, x0: [f64; N], alpha: f64, beta: f64, n: u32) -> ([f64; N], f64)
 where
-    F: Fn(&[f64; 2]) -> f64,
-    G: Fn(&[f64; 2]) -> [f64; 2],
+    P: FullGradient<N>
 {
-    let mut x_present: [f64; 2] = x0;
-    let mut x_past: [f64; 2] = x0;
+    let mut x_present: [f64; N] = x0;
+    let mut x_past: [f64; N] = x0;
     for _ in 0..n {
-        let v: [f64; 2] = std::array::from_fn(|i| x_present[i] + beta * (x_present[i] - x_past[i]));
-        let grad_v: [f64; 2] = gradf(&v);
+        let v: [f64; N] = std::array::from_fn(|i| x_present[i] + beta * (x_present[i] - x_past[i]));
+        let grad_v: [f64; N] = prob.gradient(&v);
         x_past = x_present;
         x_present = std::array::from_fn(|i| v[i] - alpha * grad_v[i]);
     }
-    x_present
+    (x_present, prob.objective(&x_present))
 }
 
-pub fn sgd<const N: usize, const S: usize, F, G>(_f: F, gradf: G, x0: [f64; N], alpha: f64, n: u32) -> [f64; N]
+pub fn sgd<const N: usize, const S: usize, F, G>(f: F, gradf: G, x0: [f64; N], alpha: f64, n: u32) -> ([f64; N], f64)
 where
     F: Fn(&[f64; N]) -> f64,
     G: Fn(&[f64; N], usize) -> [(f64, usize); S],
@@ -30,5 +30,5 @@ where
             x_present[i] -= alpha * component
         }
     }
-    x_present
+    (x_present, f(&x_present))
 }

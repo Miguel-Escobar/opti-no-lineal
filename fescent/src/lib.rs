@@ -1,33 +1,37 @@
 use pyo3::prelude::*;
+use numpy::ndarray::{ArrayD, ArrayViewD, ArrayViewMutD};
+use numpy::{IntoPyArray, PyArrayDyn, PyReadonlyArrayDyn, PyArrayMethods};
 mod algorithms;
+mod utils;
+mod probs;
 
-fn fn_for_nesterov(point: &[f64; 2]) -> f64 {
-    point.iter().map(|x| x * x).sum()
+#[pyfunction]
+fn optimize_nesterov(mu: f64, alpha: f64, beta: f64, n_iter: usize, problem: usize) -> (PyArrayDyn<f64>, f64) {
+    let init_point: [f64; 2] = [0.0, 0.0];
+    let objective = match problem {
+        1 => |point: &[f64; 2]| probs::fn_for_nesterov_1(point) + mu * utils::alpha(probs::nesterov_ab_1(point),probs::nesterov_ee_1(point)),
+        2 => |point: &[f64; 2]| probs::fn_for_nesterov_2(point) + mu * utils::alpha(probs::nesterov_ab_2(point),probs::nesterov_ee_2(point)),
+    };
+    let grad_objective = match problem {
+        1 => |point: &[f64; 2]| {
+            let grad = gradf_for_nesterov_1(point);
+            let penalization_grad = penalization_grad_nesterov_1(point);
+            [grad[0] + mu * penalization_grad[0], grad[1] + mu * penalization_grad[1]]
+        },
+        2 => |point: &[f64; 2]| {
+            let grad = gradf_for_nesterov_2(point);
+            let penalization_grad = penalization_grad_nesterov_2(point);
+            [grad[0] + mu * penalization_grad[0], grad[1] + mu * penalization_grad[1]]
+        },
+        _ => panic!("Invalid problem number. Options: 1 or 2."),
+    };
+
+
 }
 
-fn gradf_for_nesterov(point: &[f64; 2]) -> [f64; 2] {
-    point.map(|x| 2.0 * x)
+#[pyfunction]
+fn optimize_sgd(mu: f64, alpha: f64, n_iter: usize) -> (PyArrayDyn<f64>, f64) {}
 }
-
-fn fn_for_sgd<const N: usize>(x: &[f64; N]) -> f64 {
-    x.windows(2)
-        .map(|x| (50.0 * (x[1] - x[0].powi(2)).powi(2) + (1.0 - x[0]).powi(2))/(N as f64))
-        .sum()
-}
-
-fn element_wise_gradf<const N: usize>(x: &[f64; N], index: usize) -> [(f64, usize); 2] {
-    match index {
-        index if index == N - 2 => [(100.0 * (x[index] - x[index - 1].powi(2))/ (N as f64), index + 1), (0.0, index)],
-        _ => {
-            let diff_factor = x[index + 1] - x[index].powi(2);
-            [
-                ((100.0 * diff_factor) / (N as f64), index + 1),
-                ((-200.0 * diff_factor * x[index] - 2.0 * (1.0 - x[index])) / (N as f64), index)
-            ]
-        }
-    }
-}
-
 /// Formats the sum of two numbers as string.
 #[pyfunction]
 fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
