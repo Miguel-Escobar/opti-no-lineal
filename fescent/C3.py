@@ -71,9 +71,9 @@ def penaliced_optimization(
 
     while mu * actual_alpha(x) >= eps:
         if solver == optimize_nesterov:
-            x, _ = solver(x0 * 1.0, mu, alpha_solver, beta_solver, 100, problem)
+            x, _, _ = solver(x0 * 1.0, mu, alpha_solver, beta_solver, 100, problem)
         else:
-            x, _ = solver(x0 * 1.0, mu, alpha_solver, 100)
+            x, _, _ = solver(x0 * 1.0, mu, alpha_solver, 100)
 
         mu = beta * mu
         k += 1
