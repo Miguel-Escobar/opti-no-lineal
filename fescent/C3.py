@@ -1,11 +1,32 @@
+import jax
 import jax.numpy as jnp
 import fescent
 import numpy as np
 
 import matplotlib.pyplot as plt
 
+def alpha(
+    x: jnp.ndarray,
+    A: jnp.ndarray,
+    b: jnp.ndarray,
+    E: jnp.ndarray,
+    e: jnp.ndarray,
+) -> float:
+
+    phi = lambda y: jnp.maximum(0.0, y) ** 2
+    psi = lambda z: jnp.square(z)
+
+    term1 = phi(A @ x - b).sum()
+    term2 = psi(E @ x - e).sum()
+    return (term1 + term2).item()
+
 
 def penaliced_optimization(
+    f: callable,
+    A: jnp.ndarray,
+    b: jnp.ndarray,
+    E: jnp.ndarray,
+    e: jnp.ndarray,
     x0: jnp.ndarray,
     mu0: float,
     eps: float,
@@ -18,6 +39,11 @@ def penaliced_optimization(
     """
     Penalized optimization method for solving constrained optimization problems.
     Args:
+        f: Objective function to minimize.
+        A: Coefficient matrix for the linear constraints.
+        b: Right-hand side vector for the linear constraints.
+        E: Coefficient matrix for the equality constraints.
+        e: Right-hand side vector for the equality constraints.
         x0: Initial point for the optimization.
         mu0: Initial penalty parameter.
         eps: Convergence tolerance.
@@ -35,19 +61,22 @@ def penaliced_optimization(
     x = x0.copy()
 
     f_list = []
+    f_list.append(f(x))
 
     x_list = []
+    x_list.append(x.copy())
+
+    actual_alpha = lambda x: alpha(x, A, b, E, e)
 
     while mu * actual_alpha(x) >= eps:
-        if solver == fescent.optimize_nesterov:
-            x, f_val = solver(x, mu, alpha_solver, beta_solver, 100, problem)
-            x = np.array(x)
+        if solver == optimize_nesterov:
+            x, _ = solver(mu, alpha_solver, beta_solver, 100, problem)
         else:
-            x, f_val = solver(mu, alpha_solver, 100)
+            x, _ = solver(mu, alpha_solver, 100)
 
         mu = beta * mu
         k += 1
-        f_list.append(f_val)
+        f_list.append(f(x))
         x_list.append(x.copy())
 
     return x_list, f_list, k
@@ -173,17 +202,22 @@ x0 = jnp.array([0.0, 0.0])
 alpha_solver = 0.001
 beta_solver = 0.9
 
-x_list, f_list, iterations = penaliced_optimization(
-    x0, mu0, eps, beta, fescent.optimize_nesterov, alpha_solver, beta_solver, 1
-)
 
-print(f"La cantidad de iteraciones es: {iterations}")
+def f(x: jnp.ndarray) -> float:
+    return jnp.sum(jnp.square(x))
+
 
 A = jnp.array([[1, 1]])
 b = jnp.array([-100])
 
 E = jnp.array([[0, 0]])
 e = jnp.array([0])
+
+x_list, f_list, iterations = penaliced_optimization(
+    f, A, b, E, e, x0, mu0, eps, beta, optimize_nesterov, alpha_solver, beta_solver, 1
+)
+
+print(f"La cantidad de iteraciones para problema 1 con Nesterov: {iterations}")
 
 plotter(
     x_list,
@@ -197,17 +231,23 @@ plotter(
 
 x0 = jnp.array([0.0, 0.0])
 
-x_list, f_list, iterations = penaliced_optimization(
-    x0, mu0, eps, beta, fescent.optimize_nesterov, alpha_solver, beta_solver, 2
-)
 
-print(f"La cantidad de iteraciones es: {iterations}")
+def f(x: jnp.ndarray) -> jnp.ndarray:
+    return (1 - x[0]) ** (3 / 2) + 100 * (x[1] - x[0] ** 2) ** 2
+
 
 A = jnp.array([[1, 1]])
 b = jnp.array([5])
 
 E = jnp.array([[1, -5]])
 e = jnp.array([2])
+
+
+x_list, f_list, iterations = penaliced_optimization(
+    f, A, b, E, e, x0, mu0, eps, beta, optimize_nesterov, alpha_solver, beta_solver, 2
+)
+
+print(f"La cantidad de iteraciones para problema 2 con Nesterov es: {iterations}")
 
 plotter(
     x_list,
@@ -219,28 +259,35 @@ plotter(
     title="Segundo Problema de Optimización Penalizada con Nesterov",
 )
 
-# n = 1000
+n = 1000
 
-# x0 = jnp.ones(n)
+x0 = jnp.ones(n)
 
-# x_list, f_list, iterations = penaliced_optimization(
-#     x0, mu0, eps, beta, optimize_sgd, alpha_solver
-# )
 
-# print(f"La cantidad de iteraciones es: {iterations}")
+def f(x: jnp.ndarray) -> jnp.ndarray:
+    x0 = x[:-1]
+    x1 = x[1:]
+    return jnp.sum(50 * (x1 - x0**2) ** 2 + (1 - x0) ** 2)
 
-# A = jnp.ones((1, n))
-# b = jnp.array([n + 1])
 
-# E = jnp.zeros((1, n))
-# e = jnp.zeros(n)
+A = jnp.ones((1, n))
+b = jnp.array([n + 1])
 
-# plotter(
-#     x_list,
-#     f_list,
-#     A,
-#     b,
-#     E,
-#     e,
-#     title="Tercer Problema de Optimización Penalizada con SGD",
-# )
+E = jnp.zeros((1, n))
+e = jnp.zeros(n)
+
+x_list, f_list, iterations = penaliced_optimization(
+    f, A, b, E, e, x0, mu0, eps, beta, optimize_sgd, alpha_solver
+)
+
+print(f"La cantidad de iteraciones para el problema de SGD es: {iterations}")
+
+plotter(
+    x_list,
+    f_list,
+    A,
+    b,
+    E,
+    e,
+    title="Tercer Problema de Optimización Penalizada con SGD",
+)
