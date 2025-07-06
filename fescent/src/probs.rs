@@ -44,11 +44,12 @@ pub trait SparseGradient<const DOMAIN_SIZE: usize, const N: usize>: OptProblem<D
     fn sparse_gradient(&self, point: &[f64; DOMAIN_SIZE], index: usize) -> [(f64, usize); N];
 }
 
-trait ConstraintInfo<const NUM_SOFT_CONSTRAINTS: usize, const NUM_HARD_CONSTRAINTS: usize, const DOMAIN_SIZE: usize> {
+pub trait ConstraintInfo<const NUM_SOFT_CONSTRAINTS: usize, const NUM_HARD_CONSTRAINTS: usize, const DOMAIN_SIZE: usize> {
     const A_VEC: [f64; DOMAIN_SIZE];
     const E_VEC: [f64; DOMAIN_SIZE];
     fn ax_minus_b(&self, point: &[f64; DOMAIN_SIZE]) -> [f64; NUM_SOFT_CONSTRAINTS];
     fn ex_minus_e(&self, point: &[f64; DOMAIN_SIZE]) -> [f64; NUM_HARD_CONSTRAINTS];
+    fn test_alpha_val(&self, point: &[f64; DOMAIN_SIZE]) -> f64;
 }
 
 pub struct NesterovProblem1 {
@@ -65,6 +66,10 @@ impl ConstraintInfo<1, 0, 2> for NesterovProblem1 {
     }
     fn ex_minus_e(&self, _point: &[f64; 2]) -> [f64; 0] {
         []
+    }
+
+    fn test_alpha_val(&self, point: &[f64; 2]) -> f64 {
+        self.mu * utils::alpha(self.ax_minus_b(point), self.ex_minus_e(point))
     }
 }
 
@@ -102,6 +107,10 @@ impl ConstraintInfo<1, 1, 2> for NesterovProblem2 {
     fn ex_minus_e(&self, point: &[f64; 2]) -> [f64; 1] {
         [(point[0] - 5.0 * point[1]) - 2.0]
     }
+
+    fn test_alpha_val(&self, point: &[f64; 2]) -> f64 {
+        self.mu * utils::alpha(self.ax_minus_b(point), self.ex_minus_e(point))
+    }
 }
 
 
@@ -137,6 +146,10 @@ impl ConstraintInfo<0, 1, 1000> for SgdProblem {
 
     fn ex_minus_e(&self, point: &[f64; 1000]) -> [f64; 1] {
         [point.iter().sum::<f64>() - 1001.0]
+    }
+
+    fn test_alpha_val(&self, point: &[f64; 1000]) -> f64 {
+        self.mu * utils::alpha(self.ax_minus_b(point), self.ex_minus_e(point))
     }
 }
 
