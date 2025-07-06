@@ -42,8 +42,8 @@ fn optimize_sgd<'py>(
     py: Python<'py>,
     init_point: PyReadonlyArray1<'py, f64>,
     mu: f64,
-    alpha: f64,
-    n_iter: u32,
+    alpha: f64, 
+    n_iter: usize,
 ) ->  PyResult<(Py<PyArray1<f64>>, f64, f64)> {
     let init_point: [f64; 1000] = init_point
         .as_slice()?

@@ -26,11 +26,16 @@ fn fn_for_sgd<const N: usize>(x: &[f64; N]) -> f64 {
 }
 
 fn element_wise_gradf<const N: usize>(x: &[f64; N], index: usize) -> [(f64, usize); 2] {
-    let diff_factor = x[index + 1] - x[index].powi(2);
-    [
-        ((100.0 * diff_factor), index + 1),
-        ((-200.0 * diff_factor * x[index] - 2.0 * (1.0 - x[index])), index)
-    ]
+    if index == N-1 {
+        [(0.0, 0); 2]
+    }
+    else {
+        let diff_factor = x[index + 1] - x[index].powi(2);
+        [
+            ((100.0 * diff_factor), index + 1),
+            ((-200.0 * diff_factor * x[index] - 2.0 * (1.0 - x[index])), index)
+        ]
+    }
 }
 
 pub trait OptProblem<const DOMAIN_SIZE: usize> {
