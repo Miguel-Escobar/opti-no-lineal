@@ -16,19 +16,18 @@ where
     (x_present, prob.objective(&x_present))
 }
 
-pub fn sgd<const N: usize, const S: usize, F, G>(f: F, gradf: G, x0: [f64; N], alpha: f64, n: u32) -> ([f64; N], f64)
+pub fn sgd<const N: usize, const S: usize, P>(prob: P,x0: [f64; N], alpha: f64, n: u32) -> ([f64; N], f64)
 where
-    F: Fn(&[f64; N]) -> f64,
-    G: Fn(&[f64; N], usize) -> [(f64, usize); S],
+    P: SparseGradient<N, S>,
 {
     let mut x_present: [f64; N] = x0.clone();
     let mut rng = rand::rng();
     for _ in 0..n {
         let rand_term = rng.random_range(0..(N-1));
-        let grad_and_index = gradf(&x_present, rand_term);
+        let grad_and_index = prob.sparse_gradient(&x_present, rand_term);
         for (component, i) in grad_and_index {
             x_present[i] -= alpha * component
         }
     }
-    (x_present, f(&x_present))
+    (x_present, prob.objective(&x_present))
 }

@@ -51,6 +51,7 @@
                       pkgs.freetype
                       pkgs.fontconfig
                       pkgs.pkg-config
+                      pkgs.gcc
                     ];
 
                     # https://devenv.sh/languages/

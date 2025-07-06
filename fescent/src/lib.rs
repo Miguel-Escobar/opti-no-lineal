@@ -1,46 +1,38 @@
-use pyo3::prelude::*;
-use numpy::ndarray::{ArrayD, ArrayViewD, ArrayViewMutD};
-use numpy::{IntoPyArray, PyArrayDyn, PyReadonlyArrayDyn, PyArrayMethods};
 mod algorithms;
-mod utils;
 mod probs;
+mod utils;
+use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1};
+use pyo3::prelude::*;
 
 #[pyfunction]
-fn optimize_nesterov(mu: f64, alpha: f64, beta: f64, n_iter: usize, problem: usize) -> (PyArrayDyn<f64>, f64) {
-    let init_point: [f64; 2] = [0.0, 0.0];
-    let objective = match problem {
-        1 => |point: &[f64; 2]| probs::fn_for_nesterov_1(point) + mu * utils::alpha(probs::nesterov_ab_1(point),probs::nesterov_ee_1(point)),
-        2 => |point: &[f64; 2]| probs::fn_for_nesterov_2(point) + mu * utils::alpha(probs::nesterov_ab_2(point),probs::nesterov_ee_2(point)),
+fn optimize_nesterov<'py>(
+    init_point: PyReadonlyArray1<'py, f64>,
+    mu: f64,
+    alpha: f64,
+    beta: f64,
+    n_iter: u32,
+    problem: usize,
+) -> PyResult<([f64; 2], f64)> {
+    let init_point: [f64; 2] = init_point
+        .as_slice()?
+        .try_into()
+        .expect("Init point must have length 2");
+    let (point, f_val) = match problem {
+        1 => {
+            let prob = probs::NesterovProblem1 { mu };
+            algorithms::nesterov(prob, init_point, alpha, beta, n_iter)
+        }
+        2 => {
+            let prob = probs::NesterovProblem2 { mu };
+            algorithms::nesterov(prob, init_point, alpha, beta, n_iter)
+        }
+        _ => panic!("Unvalid problem type! Only 1 and 2 are supported."),
     };
-    let grad_objective = match problem {
-        1 => |point: &[f64; 2]| {
-            let grad = gradf_for_nesterov_1(point);
-            let penalization_grad = penalization_grad_nesterov_1(point);
-            [grad[0] + mu * penalization_grad[0], grad[1] + mu * penalization_grad[1]]
-        },
-        2 => |point: &[f64; 2]| {
-            let grad = gradf_for_nesterov_2(point);
-            let penalization_grad = penalization_grad_nesterov_2(point);
-            [grad[0] + mu * penalization_grad[0], grad[1] + mu * penalization_grad[1]]
-        },
-        _ => panic!("Invalid problem number. Options: 1 or 2."),
-    };
-
-
+    Ok((point, f_val))
 }
 
-#[pyfunction]
-fn optimize_sgd(mu: f64, alpha: f64, n_iter: usize) -> (PyArrayDyn<f64>, f64) {}
-}
-/// Formats the sum of two numbers as string.
-#[pyfunction]
-fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
-    Ok((a + b).to_string())
-}
-
-/// A Python module implemented in Rust.
 #[pymodule]
-fn fescent(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
+fn fescent<'py>(py: Python<'py>, m: &Bound<'py, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(optimize_nesterov, m)?)?;
     Ok(())
 }

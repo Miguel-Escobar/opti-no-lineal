@@ -56,8 +56,8 @@ trait ConstraintInfo<const NUM_SOFT_CONSTRAINTS: usize, const NUM_HARD_CONSTRAIN
     fn ex_minus_e(&self, point: &[f64; DOMAIN_SIZE]) -> [f64; NUM_HARD_CONSTRAINTS];
 }
 
-struct NesterovProblem1 {
-    mu: f64,
+pub struct NesterovProblem1 {
+    pub mu: f64,
 }
 
 impl ConstraintInfo<1, 0, 2> for NesterovProblem1 {
@@ -91,8 +91,8 @@ impl FullGradient<2> for NesterovProblem1 {
     }
 }
 
-struct NesterovProblem2 {
-    mu: f64
+pub struct NesterovProblem2 {
+    pub mu: f64
 }
 
 
@@ -127,7 +127,7 @@ impl FullGradient<2> for NesterovProblem2 {
     }
 }
 
-struct SgdProblem {
+pub struct SgdProblem {
     mu: f64
 }
 
@@ -152,14 +152,14 @@ impl OptProblem<1000> for SgdProblem {
     }
 }
 
-impl SparseGradient<1000, 1> for SgdProblem {
-    fn sparse_gradient(&self, point: &[f64; 1000], index: usize) -> [(f64, usize); 1] {
+impl SparseGradient<1000, 3> for SgdProblem {
+    fn sparse_gradient(&self, point: &[f64; 1000], index: usize) -> [(f64, usize); 3] {
         let penalization_term = utils::alpha_partial_grad(self.ax_minus_b(point), self.ex_minus_e(point), [0.0], [1.0]);
         let objective_term = element_wise_gradf(point, index);
         [
             objective_term[0],
             objective_term[1],
-            (penalization_term[0], index)
+            (penalization_term[0], index),
         ]
     }
 }
