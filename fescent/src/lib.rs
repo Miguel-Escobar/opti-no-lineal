@@ -1,18 +1,19 @@
 mod algorithms;
 mod probs;
 mod utils;
-use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1};
+use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1, ToPyArray};
 use pyo3::prelude::*;
 
 #[pyfunction]
 fn optimize_nesterov<'py>(
+    py: Python<'py>,
     init_point: PyReadonlyArray1<'py, f64>,
     mu: f64,
     alpha: f64,
     beta: f64,
     n_iter: u32,
     problem: usize,
-) -> PyResult<([f64; 2], f64)> {
+) ->  PyResult<(Py<PyArray1<f64>>, f64)> {
     let init_point: [f64; 2] = init_point
         .as_slice()?
         .try_into()
@@ -28,7 +29,9 @@ fn optimize_nesterov<'py>(
         }
         _ => panic!("Unvalid problem type! Only 1 and 2 are supported."),
     };
-    Ok((point, f_val))
+    // Convert the array to a NumPy array
+    let np_array = point.to_pyarray(py).to_owned();
+    Ok((np_array.into(), f_val))
 }
 
 #[pymodule]
