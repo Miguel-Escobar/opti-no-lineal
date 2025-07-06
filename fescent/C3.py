@@ -1,5 +1,5 @@
-import jax
-import jax.numpy as jnp
+# import jax
+# import jax.numpy as jnp
 from fescent import *
 import numpy as np
 
@@ -7,15 +7,15 @@ import matplotlib.pyplot as plt
 
 
 def alpha(
-    x: jnp.ndarray,
-    A: jnp.ndarray,
-    b: jnp.ndarray,
-    E: jnp.ndarray,
-    e: jnp.ndarray,
+    x: np.ndarray,
+    A: np.ndarray,
+    b: np.ndarray,
+    E: np.ndarray,
+    e: np.ndarray,
 ) -> float:
 
-    phi = lambda y: jnp.maximum(0.0, y) ** 2
-    psi = lambda z: jnp.square(z)
+    phi = lambda y: np.maximum(0.0, y) ** 2
+    psi = lambda z: np.square(z)
 
     term1 = phi(A @ x - b).sum()
     term2 = psi(E @ x - e).sum()
@@ -24,11 +24,11 @@ def alpha(
 
 def penaliced_optimization(
     f: callable,
-    A: jnp.ndarray,
-    b: jnp.ndarray,
-    E: jnp.ndarray,
-    e: jnp.ndarray,
-    x0: jnp.ndarray,
+    A: np.ndarray,
+    b: np.ndarray,
+    E: np.ndarray,
+    e: np.ndarray,
+    x0: np.ndarray,
     mu0: float,
     eps: float,
     beta: float,
@@ -36,7 +36,7 @@ def penaliced_optimization(
     alpha_solver: float,
     beta_solver: float = None,
     problem: int = None,
-) -> tuple[jnp.ndarray, float, int]:
+) -> tuple[np.ndarray, float, int]:
     """
     Penalized optimization method for solving constrained optimization problems.
     Args:
@@ -84,12 +84,12 @@ def penaliced_optimization(
 
 
 def plotter(
-    x_list: list[jnp.ndarray],
+    x_list: list[np.ndarray],
     f_list: list[float],
-    A: jnp.ndarray,
-    b: jnp.ndarray,
-    E: jnp.ndarray,
-    e: jnp.ndarray,
+    A: np.ndarray,
+    b: np.ndarray,
+    E: np.ndarray,
+    e: np.ndarray,
     title: str = "Optimization Progress",
 ) -> None:
     """
@@ -111,8 +111,8 @@ def plotter(
         None
     """
     # Convert to numpy for plotting
-    xs = jnp.stack([jnp.array(x) for x in x_list])  # shape (n_iter, dim)
-    fs = jnp.array(f_list)
+    xs = np.stack([np.array(x) for x in x_list])  # shape (n_iter, dim)
+    fs = np.array(f_list)
 
     # Prepare figure
     fig, (ax_f, ax_xy) = plt.subplots(1, 2, figsize=(12, 5))
@@ -132,22 +132,22 @@ def plotter(
         y_min, y_max = xs[:, 1].min(), xs[:, 1].max()
         margin_x = 0.1 * (x_max - x_min)
         margin_y = 0.1 * (y_max - y_min)
-        X, Y = jnp.meshgrid(
-            jnp.linspace(x_min - margin_x, x_max + margin_x, 200),
-            jnp.linspace(y_min - margin_y, y_max + margin_y, 200),
+        X, Y = np.meshgrid(
+            np.linspace(x_min - margin_x, x_max + margin_x, 200),
+            np.linspace(y_min - margin_y, y_max + margin_y, 200),
         )
-        pts = jnp.vstack([X.ravel(), Y.ravel()])  # shape (2, N)
+        pts = np.vstack([X.ravel(), Y.ravel()])  # shape (2, N)
 
         # Inequality mask: A x <= b
-        Ai = jnp.array(A)
-        bi = jnp.array(b)
-        mask_ineq = jnp.all(Ai @ pts <= bi[:, None], axis=0)
+        Ai = np.array(A)
+        bi = np.array(b)
+        mask_ineq = np.all(Ai @ pts <= bi[:, None], axis=0)
 
         # Equality mask: Ex = e (approx)
-        Ei = jnp.array(E)
-        ei = jnp.array(e)
+        Ei = np.array(E)
+        ei = np.array(e)
         tol = 1e-6
-        mask_eq = jnp.all(jnp.abs(Ei @ pts - ei[:, None]) < tol, axis=0)
+        mask_eq = np.all(np.abs(Ei @ pts - ei[:, None]) < tol, axis=0)
 
         # Combine feasible: inequality and equality
         mask = mask_ineq & mask_eq
@@ -168,7 +168,7 @@ def plotter(
         sc = ax_xy.scatter(
             xs[:, 0],
             xs[:, 1],
-            c=jnp.arange(len(xs)),
+            c=np.arange(len(xs)),
             cmap="viridis",
             label="Trayectoria",
         )
@@ -198,21 +198,21 @@ def plotter(
 mu0 = 1.0
 beta = 2.0
 eps = 1e-3
-x0 = jnp.array([0.0, 0.0])
+x0 = np.array([0.0, 0.0])
 
 alpha_solver = 0.001
 beta_solver = 0.9
 
 
-def f(x: jnp.ndarray) -> float:
-    return jnp.sum(jnp.square(x))
+def f(x: np.ndarray) -> float:
+    return np.sum(np.square(x))
 
 
-A = jnp.array([[1, 1]])
-b = jnp.array([-100])
+A = np.array([[1, 1]])
+b = np.array([-100])
 
-E = jnp.array([[0, 0]])
-e = jnp.array([0])
+E = np.array([[0, 0]])
+e = np.array([0])
 
 x_list, f_list, iterations = penaliced_optimization(
     f, A, b, E, e, x0, mu0, eps, beta, optimize_nesterov, alpha_solver, beta_solver, 1
@@ -230,18 +230,18 @@ plotter(
     title="Primer Problema de Optimización Penalizada con Nesterov",
 )
 
-x0 = jnp.array([0.0, 0.0])
+x0 = np.array([0.0, 0.0])
 
 
-def f(x: jnp.ndarray) -> jnp.ndarray:
+def f(x: np.ndarray) -> np.ndarray:
     return (1 - x[0]) ** (3 / 2) + 100 * (x[1] - x[0] ** 2) ** 2
 
 
-A = jnp.array([[1, 1]])
-b = jnp.array([5])
+A = np.array([[1, 1]])
+b = np.array([5])
 
-E = jnp.array([[1, -5]])
-e = jnp.array([2])
+E = np.array([[1, -5]])
+e = np.array([2])
 
 
 x_list, f_list, iterations = penaliced_optimization(
@@ -262,20 +262,20 @@ plotter(
 
 n = 1000
 
-x0 = jnp.ones(n)
+x0 = np.ones(n)
 
 
-def f(x: jnp.ndarray) -> jnp.ndarray:
+def f(x: np.ndarray) -> np.ndarray:
     x0 = x[:-1]
     x1 = x[1:]
-    return jnp.sum(50 * (x1 - x0**2) ** 2 + (1 - x0) ** 2)
+    return np.sum(50 * (x1 - x0**2) ** 2 + (1 - x0) ** 2)
 
 
-A = jnp.ones((1, n))
-b = jnp.array([n + 1])
+A = np.ones((1, n))
+b = np.array([n + 1])
 
-E = jnp.zeros((1, n))
-e = jnp.zeros(n)
+E = np.zeros((1, n))
+e = np.zeros(n)
 
 x_list, f_list, iterations = penaliced_optimization(
     f, A, b, E, e, x0, mu0, eps, beta, optimize_sgd, alpha_solver
