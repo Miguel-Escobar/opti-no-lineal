@@ -1,8 +1,8 @@
-pub fn squared_relu(x: f64) -> f64 {
+fn squared_relu(x: f64) -> f64 {
     (x.max(0.0)).powi(2)
 }
 
-pub fn squared_relu_grad(x: f64) -> f64 {
+fn squared_relu_grad(x: f64) -> f64 {
     if x > 0.0 {
         2.0 * x
     } else {
@@ -10,11 +10,11 @@ pub fn squared_relu_grad(x: f64) -> f64 {
     }
 }
 
-pub fn squared(x: f64) -> f64 {
+fn squared(x: f64) -> f64 {
     x * x
 }
 
-pub fn squared_grad(x: f64) -> f64 {
+fn squared_grad(x: f64) -> f64 {
     2.0 * x
 }
 
@@ -29,11 +29,11 @@ pub fn alpha_partial_grad<const NUM_HARD_CONSTRAINTS: usize, const NUM_SOFT_CONS
     let mut output: [f64; N] = [0.0; N];
     for i in 0..N {
         for ax_b in ax_minus_b {
-            output[i] += ax_b*a_vec[i];
+            output[i] += squared_relu_grad(ax_b)*a_vec[i];
         };
 
         for ex_e in ex_minus_e {
-            output[i] += ex_e*e_vec[i]
+            output[i] += squared_grad(ex_e)*e_vec[i]
         }
     };
     output

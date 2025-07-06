@@ -1,5 +1,6 @@
-import jax
 import jax.numpy as jnp
+import fescent
+import numpy as np
 
 import matplotlib.pyplot as plt
 
@@ -34,14 +35,13 @@ def penaliced_optimization(
     x = x0.copy()
 
     f_list = []
-    f_list.append(f(x))
 
     x_list = []
-    x_list.append(x.copy())
 
     while mu * actual_alpha(x) >= eps:
-        if solver == optimize_nesterov:
-            x, f_val = solver(mu, alpha_solver, beta_solver, 100, problem)
+        if solver == fescent.optimize_nesterov:
+            x, f_val = solver(x, mu, alpha_solver, beta_solver, 100, problem)
+            x = np.array(x)
         else:
             x, f_val = solver(mu, alpha_solver, 100)
 
@@ -174,7 +174,7 @@ alpha_solver = 0.001
 beta_solver = 0.9
 
 x_list, f_list, iterations = penaliced_optimization(
-    x0, mu0, eps, beta, optimize_nesterov, alpha_solver, beta_solver, 1
+    x0, mu0, eps, beta, fescent.optimize_nesterov, alpha_solver, beta_solver, 1
 )
 
 print(f"La cantidad de iteraciones es: {iterations}")
@@ -198,7 +198,7 @@ plotter(
 x0 = jnp.array([0.0, 0.0])
 
 x_list, f_list, iterations = penaliced_optimization(
-    x0, mu0, eps, beta, optimize_nesterov, alpha_solver, beta_solver, 2
+    x0, mu0, eps, beta, fescent.optimize_nesterov, alpha_solver, beta_solver, 2
 )
 
 print(f"La cantidad de iteraciones es: {iterations}")
@@ -219,28 +219,28 @@ plotter(
     title="Segundo Problema de Optimización Penalizada con Nesterov",
 )
 
-n = 1000
+# n = 1000
 
-x0 = jnp.ones(n)
+# x0 = jnp.ones(n)
 
-x_list, f_list, iterations = penaliced_optimization(
-    x0, mu0, eps, beta, optimize_sgd, alpha_solver
-)
+# x_list, f_list, iterations = penaliced_optimization(
+#     x0, mu0, eps, beta, optimize_sgd, alpha_solver
+# )
 
-print(f"La cantidad de iteraciones es: {iterations}")
+# print(f"La cantidad de iteraciones es: {iterations}")
 
-A = jnp.ones((1, n))
-b = jnp.array([n + 1])
+# A = jnp.ones((1, n))
+# b = jnp.array([n + 1])
 
-E = jnp.zeros((1, n))
-e = jnp.zeros(n)
+# E = jnp.zeros((1, n))
+# e = jnp.zeros(n)
 
-plotter(
-    x_list,
-    f_list,
-    A,
-    b,
-    E,
-    e,
-    title="Tercer Problema de Optimización Penalizada con SGD",
-)
+# plotter(
+#     x_list,
+#     f_list,
+#     A,
+#     b,
+#     E,
+#     e,
+#     title="Tercer Problema de Optimización Penalizada con SGD",
+# )

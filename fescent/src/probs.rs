@@ -21,21 +21,16 @@ fn gradf_for_nesterov_2(point: &[f64; 2]) -> [f64; 2] {
 
 fn fn_for_sgd<const N: usize>(x: &[f64; N]) -> f64 {
     x.windows(2)
-        .map(|x| (50.0 * (x[1] - x[0].powi(2)).powi(2) + (1.0 - x[0]).powi(2))/(N as f64))
+        .map(|x| (50.0 * (x[1] - x[0].powi(2)).powi(2) + (1.0 - x[0]).powi(2)))
         .sum()
 }
 
 fn element_wise_gradf<const N: usize>(x: &[f64; N], index: usize) -> [(f64, usize); 2] {
-    match index {
-        index if index == N - 2 => [(100.0 * (x[index] - x[index - 1].powi(2)) / (N as f64), index + 1), (0.0, index)],
-        _ => {
-            let diff_factor = x[index + 1] - x[index].powi(2);
-            [
-                ((100.0 * diff_factor) / (N as f64), index + 1),
-                ((-200.0 * diff_factor * x[index] - 2.0 * (1.0 - x[index])) / (N as f64), index)
-            ]
-        }
-    }
+    let diff_factor = x[index + 1] - x[index].powi(2);
+    [
+        ((100.0 * diff_factor), index + 1),
+        ((-200.0 * diff_factor * x[index] - 2.0 * (1.0 - x[index])), index)
+    ]
 }
 
 pub trait OptProblem<const DOMAIN_SIZE: usize> {
@@ -128,7 +123,7 @@ impl FullGradient<2> for NesterovProblem2 {
 }
 
 pub struct SgdProblem {
-    mu: f64
+    pub mu: f64
 }
 
 impl ConstraintInfo<0, 1, 1000> for SgdProblem {
@@ -148,7 +143,7 @@ impl ConstraintInfo<0, 1, 1000> for SgdProblem {
 
 impl OptProblem<1000> for SgdProblem {
     fn objective(&self, point: &[f64; 1000]) -> f64 {
-        fn_for_sgd(point) + utils::alpha(self.ax_minus_b(point), self.ex_minus_e(point))
+        fn_for_sgd(point) + self.mu * utils::alpha(self.ax_minus_b(point), self.ex_minus_e(point))
     }
 }
 
@@ -159,7 +154,7 @@ impl SparseGradient<1000, 3> for SgdProblem {
         [
             objective_term[0],
             objective_term[1],
-            (penalization_term[0], index),
+            (self.mu * penalization_term[0], index),
         ]
     }
 }
