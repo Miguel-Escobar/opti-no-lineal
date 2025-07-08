@@ -76,6 +76,7 @@ def penaliced_optimization(
             x, _, _ = solver(x * 1.0, mu, alpha_solver, 100)
 
         mu = beta * mu
+        alpha_solver *= 1/beta
         k += 1
         f_list.append(f(x))
         x_list.append(x.copy())
@@ -146,7 +147,7 @@ def plotter(
         # Equality mask: Ex = e (approx)
         Ei = np.array(E)
         ei = np.array(e)
-        tol = 1e-6
+        tol = 0.1
         mask_eq = np.all(np.abs(Ei @ pts - ei[:, None]) < tol, axis=0)
 
         # Combine feasible: inequality and equality

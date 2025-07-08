@@ -111,7 +111,7 @@ impl ConstraintInfo<1, 1, 2> for NesterovProblem2 {
     }
 
     fn ex_minus_e(&self, point: &[f64; 2]) -> [f64; 1] {
-        [(point[0] - 5.0 * point[1]) - 2.0]
+        [point[0] - 5.0 * point[1] - 2.0]
     }
 
     fn test_alpha_val(&self, point: &[f64; 2]) -> f64 {
@@ -122,18 +122,20 @@ impl ConstraintInfo<1, 1, 2> for NesterovProblem2 {
 
 impl OptProblem<2> for NesterovProblem2 {
     fn objective(&self, point: &[f64; 2]) -> f64 {
-        fn_for_nesterov_2(point) + self.mu * utils::alpha(
-            self.ax_minus_b(point),
-            self.ex_minus_e(point)
+        let point = [1.0 - (-point[0]).exp(), point[1]];
+        fn_for_nesterov_2(&point) + self.mu * utils::alpha(
+            self.ax_minus_b(&point),
+            self.ex_minus_e(&point)
         )
     }
 }
 
 impl FullGradient<2> for NesterovProblem2 {
     fn gradient(&self, point: &[f64; 2]) -> [f64; 2] {
-        let obj_grad = gradf_for_nesterov_2(point);
-        let alpha_grad: [f64; 2] = utils::alpha_partial_grad(self.ax_minus_b(point), self.ex_minus_e(point), NesterovProblem2::A_VEC, NesterovProblem2::E_VEC);
-        std::array::from_fn::<f64, 2, _>(|i: usize| obj_grad[i] + self.mu * alpha_grad[i])
+        let point = [1.0 - (-point[0]).exp(), point[1]];
+        let obj_grad = gradf_for_nesterov_2(&point);
+        let alpha_grad: [f64; 2] = utils::alpha_partial_grad(self.ax_minus_b(&point), self.ex_minus_e(&point), NesterovProblem2::A_VEC, NesterovProblem2::E_VEC);
+        [(obj_grad[0] + self.mu * alpha_grad[0]) * (-point[0]).exp(), obj_grad[1] + self.mu * alpha_grad[1]]
     }
 }
 
