@@ -280,6 +280,8 @@ b = np.zeros([n + 1])
 E = np.ones((1, n))
 e = np.array([n + 1])
 
+alpha_solver = 1e-4
+
 x_list, f_list, iterations = penaliced_optimization(
     f, A, b, E, e, x0, mu0, eps, beta, optimize_sgd, alpha_solver
 )
