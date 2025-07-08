@@ -201,7 +201,7 @@ beta = 2.0
 eps = 1e-3
 x0 = np.array([0.0, 0.0])
 
-alpha_solver = 0.001
+alpha_solver = 0.1
 beta_solver = 0.1
 
 
@@ -243,6 +243,8 @@ b = np.array([5])
 
 E = np.array([[1, -5]])
 e = np.array([2])
+
+alpha_solver = 0.001
 
 
 x_list, f_list, iterations = penaliced_optimization(
