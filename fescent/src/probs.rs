@@ -14,7 +14,7 @@ fn fn_for_nesterov_2(point: &[f64; 2]) -> f64 {
 
 fn gradf_for_nesterov_2(point: &[f64; 2]) -> [f64; 2] {
     [
-        -1.5 * (1.0 - point[0]).powf(0.5) - 400.0 * (point[1] - point[0].powi(2)) * point[0],
+        -1.5 * (1.0 - point[0]).sqrt() - 400.0 * (point[1] - point[0].powi(2)) * point[0],
         200.0 * (point[1] - point[0].powi(2)),
     ]
 }
@@ -109,6 +109,7 @@ impl ConstraintInfo<1, 1, 2> for NesterovProblem2 {
     fn ax_minus_b(&self, point: &[f64; 2]) -> [f64; 1] {
         [(point[0] + point[1]) - 5.0]
     }
+
     fn ex_minus_e(&self, point: &[f64; 2]) -> [f64; 1] {
         [(point[0] - 5.0 * point[1]) - 2.0]
     }

@@ -71,9 +71,9 @@ def penaliced_optimization(
 
     while mu * actual_alpha(x) >= eps:
         if solver == optimize_nesterov:
-            x, _, _ = solver(x0 * 1.0, mu, alpha_solver, beta_solver, 100, problem)
+            x, _, _ = solver(x * 1.0, mu, alpha_solver, beta_solver, 100, problem)
         else:
-            x, _, _ = solver(x0 * 1.0, mu, alpha_solver, 100)
+            x, _, _ = solver(x * 1.0, mu, alpha_solver, 100)
 
         mu = beta * mu
         k += 1
@@ -201,7 +201,7 @@ eps = 1e-3
 x0 = np.array([0.0, 0.0])
 
 alpha_solver = 0.001
-beta_solver = 0.9
+beta_solver = 0.1
 
 
 def f(x: np.ndarray) -> float:
@@ -262,7 +262,7 @@ plotter(
 
 n = 1000
 
-x0 = np.ones(n)
+x0 = np.ones(n, dtype=float)
 
 
 def f(x: np.ndarray) -> np.ndarray:
@@ -271,11 +271,11 @@ def f(x: np.ndarray) -> np.ndarray:
     return np.sum(50 * (x1 - x0**2) ** 2 + (1 - x0) ** 2)
 
 
-A = np.ones((1, n))
-b = np.array([n + 1])
+A = np.zeros((1, n))
+b = np.zeros([n + 1])
 
-E = np.zeros((1, n))
-e = np.zeros(n)
+E = np.ones((1, n))
+e = np.array([n + 1])
 
 x_list, f_list, iterations = penaliced_optimization(
     f, A, b, E, e, x0, mu0, eps, beta, optimize_sgd, alpha_solver
